@@ -1,4 +1,5 @@
 'use strict';
+const FLAG = 'U+1F605';
 const MINE = '&#128169';
 const EMPTY = '';
 var elMinutes = document.querySelector('.minutes');
@@ -69,7 +70,7 @@ function renderBoard(board, isHidden) {
           content = cell.minesAroundCount;
         }
       }
-      strHTML += '<td class="' + className + '" onclick="cellClicked(this, ' + i + ','+ j +')" oncontextmenu="cellMarked(this, ' + i + ','+ j +')"> ' + content + ' </td>';
+      strHTML += '<td class="' + className + '" class="masked" onclick="cellClicked(this, ' + i + ','+ j +')" oncontextmenu="cellMarked(this, ' + i + ','+ j +')"> ' + content + ' </td>';
     }
     strHTML += '</tr>';
   }
@@ -83,6 +84,11 @@ function cellMarked(elCell, i, j){
     gGame.isOn = true;
     gInterval = setInterval(countTime, 1000);
   }
+  if (document.addEventListener) {
+    document.addEventListener('contextmenu', function (e) {e.preventDefault();}, false);
+  } else {
+    document.attachEvent('oncontextmenu', function () {window.event.returnValue = false;});
+  }
   if (!gBoard[i][j].isShown){
     if(!gBoard[i][j].isMarked){
      gBoard[i][j].isMarked = true;
@@ -91,8 +97,10 @@ function cellMarked(elCell, i, j){
       gBoard[i][j].isMarked = false;
      gGame.minesCount++;
     }
-  checkGameOver();
+    renderCellFlagged(i,j);
+    checkGameOver();
   }
+  return false;
 }
 
 function cellClicked(elCell, i, j){ 
@@ -134,7 +142,7 @@ function renderCellMineOrNothing(i, j) {
 function setMinesNegsCount(board) {
   for (var i = 0; i < board.length; i++) {
     for (var j = 0; j < board.length; j++) {
-      board[i][j].minesAroundCount = findNegsMines(i, j, board);
+      if (!board[i][j].isMine) board[i][j].minesAroundCount = findNegsMines(i, j, board);
     }
   }
 }
@@ -187,4 +195,11 @@ function playerLost(){
     renderCellMineOrNothing(currBombPosI, currBombPosj);
   }
   alert('LOST! Thanks for playing, click RESTART button to try again!');
+}
+
+function renderCellFlagged(i,j){
+  var cellClass = 'cell' + i + '-' + j;
+  var cellSelector = '.' +cellClass;
+  var elCell = document.querySelector(cellSelector);
+  elCell.innerHTML = FLAG;
 }
